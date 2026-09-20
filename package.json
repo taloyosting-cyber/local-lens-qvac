@@ -1,0 +1,13 @@
+{
+  "name": "local-lens-qvac",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A local-first clarity tool powered by QVAC on-device inference.",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@qvac/sdk": "0.19.1"
+  }
+}
