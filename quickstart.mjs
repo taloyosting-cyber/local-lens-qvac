@@ -1,3 +1,5 @@
+import readline from "node:readline";
+
 import {
   loadModel,
   LLAMA_3_2_1B_INST_Q4_0,
@@ -7,9 +9,28 @@ import {
 
 let modelId = null;
 
+async function askAI(question) {
+  const result = completion({
+    modelId,
+    history: [
+      {
+        role: "user",
+        content: question,
+      },
+    ],
+    stream: true,
+  });
+
+  for await (const token of result.tokenStream) {
+    process.stdout.write(token);
+  }
+
+  console.log("\n");
+}
+
 async function main() {
   console.log("========================================");
-  console.log(" Local Lens — QVAC Quickstart");
+  console.log(" Local Lens — QVAC Interactive CLI");
   console.log("========================================");
   console.log("");
   console.log("Loading QVAC model locally...");
@@ -17,57 +38,71 @@ async function main() {
   modelId = await loadModel({
     modelSrc: LLAMA_3_2_1B_INST_Q4_0,
     onProgress: (progress) => {
-      console.log(`Model loading: ${progress.percentage.toFixed(1)}%`);
+      process.stdout.write(
+        `\rModel loading: ${progress.percentage.toFixed(1)}%`
+      );
     },
   });
 
-  console.log("");
+  console.log("\n");
   console.log("QVAC model loaded!");
-  console.log("Model ID:", modelId);
-  console.log("");
-  console.log("Running local completion...");
+  console.log("AI inference is running locally.");
+  console.log("Type your question below.");
+  console.log("Type 'exit' to quit.");
   console.log("");
 
-  const result = completion({
-    modelId,
-    history: [
-      {
-        role: "user",
-        content:
-          "Explain in one short sentence why running AI locally can be useful.",
-      },
-    ],
-    stream: true,
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    prompt: "You: ",
   });
 
-  let output = "";
+  rl.prompt();
 
-  for await (const token of result.tokenStream) {
-    output += token;
-    process.stdout.write(token);
-  }
+  rl.on("line", async (input) => {
+    const question = input.trim();
 
-  console.log("");
-  console.log("");
-  console.log("QVAC inference completed locally.");
+    if (question.toLowerCase() === "exit") {
+      rl.close();
+      return;
+    }
 
-  await unloadModel({ modelId });
+    if (!question) {
+      rl.prompt();
+      return;
+    }
 
-  console.log("QVAC model unloaded.");
-  console.log("");
-  console.log("Quickstart complete.");
+    try {
+      process.stdout.write("AI: ");
+      await askAI(question);
+    } catch (error) {
+      console.error("\nError:", error.message);
+    }
+
+    rl.prompt();
+  });
+
+  rl.on("close", async () => {
+    console.log("");
+    console.log("Unloading QVAC model...");
+
+    if (modelId) {
+      try {
+        await unloadModel({ modelId });
+      } catch (error) {
+        console.error("Could not unload model:", error.message);
+      }
+    }
+
+    console.log("QVAC model unloaded.");
+    console.log("Goodbye!");
+  });
 }
 
-main().catch(async (error) => {
+main().catch((error) => {
   console.error("");
   console.error("Quickstart failed:");
   console.error(error);
-
-  if (modelId) {
-    try {
-      await unloadModel({ modelId });
-    } catch {}
-  }
 
   process.exit(1);
 });
