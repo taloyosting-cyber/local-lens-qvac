@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "description": "A local-first clarity tool powered by QVAC on-device inference.",
-  "scripts": {
-    "start": "node server.mjs"
-  },
+ "scripts": {
+  "start": "node server.mjs",
+  "quickstart": "node quickstart.mjs"
+},
   "dependencies": {
     "@qvac/sdk": "0.19.1"
   }
