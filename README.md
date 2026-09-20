@@ -1,0 +1,1 @@
+Local Lens uses QVAC to run AI inference directly on your device. No cloud AI API is required.Local Lens uses QVAC to run AI inference directly on your device. No cloud AI API is required.
